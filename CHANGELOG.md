@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-06-20
+
+### Added
+
+- **Cluster coordination** — `cluster init|status|render-config`, leader election state at `~/.autonomic/state/nerves/cluster.json`
+- **NATS cluster routes** — embedded broker writes `nats-cluster.conf` with JetStream + route peers when `cluster.enabled`
+- **WireGuard probe** — cluster status reports whether the configured tunnel interface is up
+- **Event filters** — JSON rules + optional WASM modules (`filter(i32,i32)->i32`) under `~/.autonomic/filters`
+- **CLI** — `filter list|test`, `stream tail --filter`, HTTP `/cluster/status`, `/filter/test`, `/filter/rules`
+
 ## [0.5.1] - 2026-06-20
 
 ### Added

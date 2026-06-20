@@ -1,6 +1,6 @@
 [package]
 name = "agent-nerves"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2021"
 
 [dependencies]
@@ -19,3 +19,7 @@ serde_yaml = "0.9"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+wasmtime = "28"
+
+[dev-dependencies]
+tempfile = "3"

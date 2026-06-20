@@ -8,6 +8,7 @@ use tracing::{info, warn};
 pub async fn ensure_embedded_broker(
     store_dir: &Path,
     url: &str,
+    cluster_config: Option<&crate::cluster::ClusterConfig>,
 ) -> anyhow::Result<Option<tokio::process::Child>> {
     if ping_nats(url).await {
         info!("NATS already reachable at {url}");
@@ -21,14 +22,25 @@ pub async fn ensure_embedded_broker(
         "starting embedded nats-server (-js)"
     );
 
-    let child = Command::new("nats-server")
-        .arg("-js")
+    let mut cmd = Command::new("nats-server");
+    cmd.arg("-js")
         .arg("-sd")
         .arg(store_dir)
-        .arg("-p")
-        .arg(port.to_string())
         .stdout(Stdio::null())
-        .stderr(Stdio::null())
+        .stderr(Stdio::null());
+
+    if let Some(cluster) = cluster_config.filter(|c| c.enabled) {
+        if let Ok(conf_path) = crate::cluster::write_nats_cluster_config(cluster, store_dir, port) {
+            info!("using NATS cluster config {}", conf_path.display());
+            cmd.arg("-c").arg(conf_path);
+        } else {
+            cmd.arg("-p").arg(port.to_string());
+        }
+    } else {
+        cmd.arg("-p").arg(port.to_string());
+    }
+
+    let child = cmd
         .spawn()
         .map_err(|e| anyhow::anyhow!("failed to spawn nats-server: {e}"))?;
 

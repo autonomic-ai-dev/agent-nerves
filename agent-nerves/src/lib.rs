@@ -1,7 +1,10 @@
 pub mod broker;
+pub mod cluster;
 pub mod config;
+pub mod filter;
 pub mod jetstream;
 pub mod nats;
 pub mod serve;
 pub mod spine;
 pub mod stream;
+pub mod wasm_filter;

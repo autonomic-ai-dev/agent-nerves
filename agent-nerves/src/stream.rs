@@ -27,21 +27,28 @@ pub async fn tail_stream(
     raw: bool,
     from: TailFrom,
     jetstream_only: bool,
+    filters_dir: Option<&std::path::Path>,
 ) -> Result<()> {
     if jetstream_only {
-        return tail_jetstream(url, subject, raw, from).await;
+        return tail_jetstream(url, subject, raw, from, filters_dir).await;
     }
 
-    match tail_jetstream(url, subject, raw, from).await {
+    match tail_jetstream(url, subject, raw, from, filters_dir).await {
         Ok(()) => Ok(()),
         Err(e) => {
             eprintln!("JetStream tail unavailable ({e}); falling back to core NATS subscribe.");
-            tail_core_nats(url, subject, raw).await
+            tail_core_nats(url, subject, raw, filters_dir).await
         }
     }
 }
 
-async fn tail_jetstream(url: &str, subject: &str, raw: bool, from: TailFrom) -> Result<()> {
+async fn tail_jetstream(
+    url: &str,
+    subject: &str,
+    raw: bool,
+    from: TailFrom,
+    filters_dir: Option<&std::path::Path>,
+) -> Result<()> {
     let client = async_nats::connect(url)
         .await
         .with_context(|| format!("connect to NATS at {url}"))?;
@@ -60,11 +67,7 @@ async fn tail_jetstream(url: &str, subject: &str, raw: bool, from: TailFrom) -> 
     println!(
         "  tail subject: '{}'  from: {}  (Ctrl+C to stop)",
         subject,
-        if from == TailFrom::All {
-            "all"
-        } else {
-            "new"
-        }
+        if from == TailFrom::All { "all" } else { "new" }
     );
     println!("---");
 
@@ -88,6 +91,10 @@ async fn tail_jetstream(url: &str, subject: &str, raw: bool, from: TailFrom) -> 
 
     while let Some(msg) = messages.next().await {
         let msg = msg.context("JetStream tail message")?;
+        if should_drop(filters_dir, &msg.subject, &msg.payload)? {
+            let _ = msg.ack().await;
+            continue;
+        }
         let sequence = msg.info().ok().map(|info| info.stream_sequence);
         print_message(&msg.subject, &msg.payload, raw, sequence);
         if let Err(e) = msg.ack().await {
@@ -98,7 +105,12 @@ async fn tail_jetstream(url: &str, subject: &str, raw: bool, from: TailFrom) -> 
     Ok(())
 }
 
-async fn tail_core_nats(url: &str, subject: &str, raw: bool) -> Result<()> {
+async fn tail_core_nats(
+    url: &str,
+    subject: &str,
+    raw: bool,
+    filters_dir: Option<&std::path::Path>,
+) -> Result<()> {
     let client = async_nats::connect(url)
         .await
         .with_context(|| format!("connect to NATS at {url}"))?;
@@ -107,15 +119,40 @@ async fn tail_core_nats(url: &str, subject: &str, raw: bool) -> Result<()> {
 
     let mut subscription = client.subscribe(subject.to_string()).await?;
     while let Some(msg) = subscription.next().await {
+        if should_drop(filters_dir, &msg.subject, &msg.payload)? {
+            continue;
+        }
         print_message(&msg.subject, &msg.payload, raw, None);
     }
     Ok(())
 }
 
+fn should_drop(
+    filters_dir: Option<&std::path::Path>,
+    subject: &str,
+    payload: &[u8],
+) -> Result<bool> {
+    let Some(dir) = filters_dir else {
+        return Ok(false);
+    };
+    let decision = crate::filter::evaluate_event(dir, subject, payload)?;
+    if !decision.allowed {
+        eprintln!(
+            "filtered [{subject}] rule={:?} reason={}",
+            decision.matched_rule, decision.reason
+        );
+        return Ok(true);
+    }
+    Ok(false)
+}
+
 fn print_message(subject: &str, payload: &[u8], raw: bool, sequence: Option<u64>) {
     if raw {
         if let Some(seq) = sequence {
-            println!("[seq={seq}] [{subject}] {}", String::from_utf8_lossy(payload));
+            println!(
+                "[seq={seq}] [{subject}] {}",
+                String::from_utf8_lossy(payload)
+            );
         } else {
             println!("[{subject}] {}", String::from_utf8_lossy(payload));
         }

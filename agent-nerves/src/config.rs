@@ -6,8 +6,29 @@ use std::path::PathBuf;
 pub struct Config {
     pub server: ServerConfig,
     pub nats: NatsConfig,
+    #[serde(default)]
+    pub cluster: crate::cluster::ClusterConfig,
+    #[serde(default)]
+    pub filters: FiltersConfig,
     pub spine: SpineConfig,
     pub logging: LoggingConfig,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct FiltersConfig {
+    #[serde(default)]
+    pub enabled: bool,
+    #[serde(default)]
+    pub directory: Option<String>,
+}
+
+impl Default for FiltersConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            directory: None,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -41,6 +62,8 @@ impl Default for Config {
                 store_dir: None,
                 embedded: true,
             },
+            cluster: crate::cluster::ClusterConfig::default(),
+            filters: FiltersConfig::default(),
             spine: SpineConfig {
                 url: "http://localhost:3100".into(),
             },

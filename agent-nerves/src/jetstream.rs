@@ -55,7 +55,11 @@ pub async fn ensure_durable_consumer(
     )
     .await
     .with_context(|| format!("create durable consumer {durable_name}"))?;
-    info!(consumer = durable_name, subject = filter_subject, "jetstream consumer ready");
+    info!(
+        consumer = durable_name,
+        subject = filter_subject,
+        "jetstream consumer ready"
+    );
     Ok(())
 }
 
