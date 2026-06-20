@@ -12,6 +12,9 @@ pub struct AppState {
 
 pub async fn start(config: Config) -> anyhow::Result<()> {
     tracing::info!("Starting agent-nerves daemon...");
+    let broker_dir = config.broker_store_dir();
+    std::fs::create_dir_all(&broker_dir)?;
+    tracing::info!("Broker store dir: {}", broker_dir.display());
     let spine = SpineClient::new(&config.spine.url, "agent-nerves", env!("CARGO_PKG_VERSION"));
     spine.register().await?;
     let spine_clone = spine.clone();
@@ -34,8 +37,11 @@ pub async fn start(config: Config) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn health(State(_): State<Arc<AppState>>) -> Json<serde_json::Value> {
-    Json(serde_json::json!({"status": "ok"}))
+async fn health(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {
+    Json(serde_json::json!({
+        "status": "ok",
+        "broker_dir": state.config.broker_store_dir().display().to_string(),
+    }))
 }
 
 async fn nats_ping(State(state): State<Arc<AppState>>) -> Json<serde_json::Value> {

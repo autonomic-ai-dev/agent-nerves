@@ -18,6 +18,7 @@ pub struct ServerConfig {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NatsConfig {
     pub url: String,
+    pub store_dir: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -36,8 +37,11 @@ impl Default for Config {
             server: ServerConfig { port: 3102 },
             nats: NatsConfig {
                 url: "nats://localhost:4222".into(),
+                store_dir: None,
             },
-            spine: SpineConfig { url: "http://localhost:3100".into() },
+            spine: SpineConfig {
+                url: "http://localhost:3100".into(),
+            },
             logging: LoggingConfig {
                 level: "info".into(),
             },
@@ -47,25 +51,18 @@ impl Default for Config {
 
 impl Config {
     pub fn config_path() -> PathBuf {
-        dirs::config_dir()
-            .unwrap_or_else(|| PathBuf::from("/tmp"))
-            .join("agent-nerves")
-            .join("config.yaml")
+        agent_body_core::config_path()
+    }
+
+    pub fn broker_store_dir(&self) -> PathBuf {
+        self.nats
+            .store_dir
+            .as_ref()
+            .map(PathBuf::from)
+            .unwrap_or_else(agent_body_core::broker_dir)
     }
 
     pub fn load() -> Result<Self> {
-        let path = Self::config_path();
-        if path.exists() {
-            let s = std::fs::read_to_string(&path)?;
-            Ok(serde_yaml::from_str(&s)?)
-        } else {
-            let cfg = Config::default();
-            if let Some(parent) = path.parent() {
-                std::fs::create_dir_all(parent)?;
-            }
-            let s = serde_yaml::to_string(&cfg)?;
-            std::fs::write(&path, &s)?;
-            Ok(cfg)
-        }
+        agent_body_core::organ_config::load("nerves")
     }
 }
