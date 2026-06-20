@@ -28,8 +28,7 @@ async fn main() -> anyhow::Result<()> {
 
     match cli.command {
         Commands::Serve => {
-            println!("agent-nerves serve (not yet implemented)");
-            println!("  config: {}", agent_nerves::config::Config::config_path().display());
+            agent_nerves::serve::start(config).await?;
         }
         Commands::Ping => {
             match agent_nerves::nats::ping(&config).await {
@@ -46,7 +45,9 @@ async fn main() -> anyhow::Result<()> {
         Commands::Status => {
             println!("agent-nerves status");
             println!("  config: {}", agent_nerves::config::Config::config_path().display());
+            println!("  port: {}", config.server.port);
             println!("  nats_url: {}", config.nats.url);
+            println!("  spine: {}", config.spine.url);
         }
     }
     Ok(())

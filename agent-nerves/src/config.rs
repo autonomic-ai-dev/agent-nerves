@@ -4,12 +4,24 @@ use std::path::PathBuf;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
+    pub server: ServerConfig,
     pub nats: NatsConfig,
+    pub spine: SpineConfig,
     pub logging: LoggingConfig,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct ServerConfig {
+    pub port: u16,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct NatsConfig {
+    pub url: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SpineConfig {
     pub url: String,
 }
 
@@ -21,9 +33,11 @@ pub struct LoggingConfig {
 impl Default for Config {
     fn default() -> Self {
         Self {
+            server: ServerConfig { port: 3102 },
             nats: NatsConfig {
                 url: "nats://localhost:4222".into(),
             },
+            spine: SpineConfig { url: "http://localhost:3100".into() },
             logging: LoggingConfig {
                 level: "info".into(),
             },
