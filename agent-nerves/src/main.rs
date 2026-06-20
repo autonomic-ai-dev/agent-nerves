@@ -2,6 +2,7 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 #[derive(Parser)]
+#[command(version)]
 #[command(
     name = "agent-nerves",
     about = "Distributed event bus for autonomic agents"
