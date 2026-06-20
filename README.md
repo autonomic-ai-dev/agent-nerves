@@ -4,6 +4,16 @@
 
 `agent-nerves` is the messaging layer of the Autonomic AI ecosystem. It embeds or connects to NATS, bootstraps the shared AUTONOMIC JetStream stream, and exposes health APIs for the rest of the organism.
 
+```mermaid
+flowchart TD
+    subgraph Event Bus
+        NATS[NATS Server<br>AUTONOMIC JetStream]
+    end
+    Spine[agent-spine] <--> NATS
+    Muscle[agent-muscle] <--> NATS
+    Other[Other Organs] <--> NATS
+```
+
 Works **standalone** (`agent-nerves ping`) or **integrated** (supervised by `autonomic start`, consumed by agent-muscle and agent-spine).
 
 ---
