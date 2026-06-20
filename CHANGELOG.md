@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-20
+
+### Added
+
+- **Stream tailer** — `agent-nerves stream <subject>` subscribes to a NATS subject and prints formatted messages to stdout (like `tail -f` for NATS)
+- **Raw mode** — `--raw` flag prints unformatted message payloads
+
+### Changed
+
+- Version bumped from `0.2.0` to `0.3.0`
+- Spine capabilities include `nats:stream`
+
 ## [0.2.0] - 2026-06-20
 
 ### Added

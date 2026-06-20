@@ -22,7 +22,7 @@ impl SpineClient {
         let info = serde_json::json!({
             "name": self.name,
             "version": self.version,
-            "capabilities": ["nats:ping"],
+            "capabilities": ["nats:ping", "nats:stream"],
             "last_seen": chrono::Utc::now().to_rfc3339(),
             "metadata": HashMap::<String, String>::new(),
         });

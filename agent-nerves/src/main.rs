@@ -15,6 +15,16 @@ enum Commands {
     Ping,
     /// Show configuration and status
     Status,
+    /// Tail NATS messages from a subject
+    #[command(name = "stream")]
+    Stream {
+        /// Subject to subscribe to (default: ">")
+        #[arg(default_value = ">")]
+        subject: String,
+        /// Print raw message payload without formatting
+        #[arg(short, long)]
+        raw: bool,
+    },
 }
 
 #[tokio::main]
@@ -48,6 +58,9 @@ async fn main() -> anyhow::Result<()> {
             println!("  port: {}", config.server.port);
             println!("  nats_url: {}", config.nats.url);
             println!("  spine: {}", config.spine.url);
+        }
+        Commands::Stream { subject, raw } => {
+            agent_nerves::stream::tail_stream(&config.nats.url, &subject, raw).await?;
         }
     }
     Ok(())
