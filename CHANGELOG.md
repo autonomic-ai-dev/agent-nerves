@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-20
+
+### Added
+
+- **JetStream bootstrap** — ensures AUTONOMIC stream with explicit ACK consumers and Msg-Id dedup
+- **Embedded broker** — auto-starts `nats-server -js` when NATS is unreachable (`nats.embedded`, default on)
+- **`/jetstream/status`** — reports stream readiness and dedup/ack settings
+
+### Changed
+
+- Version bumped from `0.4.0` to `0.5.0`
+
 ## [0.4.0] - 2026-06-20
 
 ### Added
