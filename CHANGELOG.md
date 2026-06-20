@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-06-20
+
+### Added
+
+- **`stream tail`** — JetStream tail on AUTONOMIC with `--from new|all`, stream stats, and core NATS fallback
+
 ## [0.5.0] - 2026-06-20
 
 ### Added

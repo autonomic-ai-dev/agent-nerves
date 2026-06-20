@@ -15,15 +15,29 @@ enum Commands {
     Ping,
     /// Show configuration and status
     Status,
-    /// Tail NATS messages from a subject
-    #[command(name = "stream")]
+    /// Inspect and tail NATS / JetStream traffic
     Stream {
-        /// Subject to subscribe to (default: ">")
-        #[arg(default_value = ">")]
+        #[command(subcommand)]
+        command: StreamCommands,
+    },
+}
+
+#[derive(Subcommand)]
+enum StreamCommands {
+    /// Tail JetStream messages (falls back to core NATS subscribe)
+    Tail {
+        /// Subject filter (default: autonomic.>)
+        #[arg(default_value = "autonomic.>")]
         subject: String,
         /// Print raw message payload without formatting
         #[arg(short, long)]
         raw: bool,
+        /// Deliver policy: `new` (live only) or `all` (replay from stream start)
+        #[arg(long, default_value = "new")]
+        from: String,
+        /// Do not fall back to core NATS when JetStream is unavailable
+        #[arg(long)]
+        jetstream_only: bool,
     },
 }
 
@@ -59,8 +73,23 @@ async fn main() -> anyhow::Result<()> {
             println!("  nats_url: {}", config.nats.url);
             println!("  spine: {}", config.spine.url);
         }
-        Commands::Stream { subject, raw } => {
-            agent_nerves::stream::tail_stream(&config.nats.url, &subject, raw).await?;
+        Commands::Stream {
+            command: StreamCommands::Tail {
+                subject,
+                raw,
+                from,
+                jetstream_only,
+            },
+        } => {
+            let from = agent_nerves::stream::TailFrom::parse(&from)?;
+            agent_nerves::stream::tail_stream(
+                &config.nats.url,
+                &subject,
+                raw,
+                from,
+                jetstream_only,
+            )
+            .await?;
         }
     }
     Ok(())
