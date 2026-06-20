@@ -1,14 +1,67 @@
-# agent-nerves
+# agent-nerves — Distributed Event Bus for the Autonomic Ecosystem
 
-**Distributed event bus — NATS connectivity, JetStream, and multi-node cluster coordination.**
+**NATS/JetStream connectivity, stream bootstrap, event filtering, and multi-node cluster coordination.**
 
-Part of the **[Autonomic AI](https://github.com/autonomic-ai-dev/agent-body)** ecosystem. Connects to (or embeds) NATS, bootstraps the shared `AUTONOMIC` JetStream stream, and exposes health APIs for spine, muscle, and immune.
+agent-nerves is the **nervous system** of the Autonomic AI architecture. It connects organs to a shared NATS JetStream message bus, bootstraps the `AUTONOMIC` stream, and exposes health and management APIs. Every async communication between organs — compute jobs from muscle, scan results from immune, domain events from spine — flows through nerves.
 
-| Standalone | Integrated |
-|------------|------------|
-| `agent-nerves ping` | Started after `nats-server` via `autonomic start` |
-| `agent-nerves serve` on **3102** | Consumed by agent-muscle, agent-spine, agent-immune |
-| Embedded NATS fallback | External broker via `AUTONOMIC_NATS_URL` |
+The key design: **organs never speak to NATS directly.** They go through nerves, which handles connection management, reconnection backoff, stream verification, and cluster routing. This abstracts NATS topology from every organ and makes the bus observable through a single API.
+
+---
+
+## Core Concept
+
+A multi-organ agent system needs asynchronous communication. Without it, every operation blocks until a response arrives, and organ failures cascade. NATS JetStream provides durable, at-least-once delivery with wildcard subject routing — but configuring and operating NATS is additional ops burden.
+
+agent-nerves wraps NATS with an organ-friendly HTTP API that:
+
+1. Bootstraps the `AUTONOMIC` JetStream stream on startup
+2. Provides health probes (`/nats/ping`, `/health`) for the supervisor
+3. Manages reconnection with exponential backoff when NATS is unavailable
+4. Supports event filtering (JSON rules + WASM) for selective message routing
+5. Generates multi-node cluster configurations for distributed deployments
+
+```mermaid
+flowchart TD
+    NATS["nats-server<br>JetStream :4222"]
+    Nerves["agent-nerves :3102"]
+
+    subgraph Organs
+        Spine["agent-spine"]
+        Muscle["agent-muscle"]
+        Immune["agent-immune"]
+    end
+
+    subgraph Management
+        Body["autonomic start"]
+        Supervisor["Daemon supervisor"]
+    end
+
+    Body --> NATS
+    NATS --> Nerves
+
+    Spine <-->|HTTP :3100| Nerves
+    Nerves <-->|async jobs| Muscle
+    Nerves <-->|scan results| Immune
+
+    Nerves -->|health probes| Supervisor
+```
+
+**Start order:** `autonomic start` launches `nats-server -js -m 8222` first, then `agent-nerves serve` on `:3102`, then `agent-heart serve`. This ensures the message bus is available before any organ tries to publish.
+
+---
+
+## Standalone vs Integrated
+
+| Mode | What you type | What happens |
+|------|--------------|--------------|
+| **Standalone** | `agent-nerves serve` | Daemon on `:3102`, connects to NATS, bootstraps stream |
+| **Standalone** | `agent-nerves ping` | Test NATS connectivity (useful for diagnostics) |
+| **Standalone** | `agent-nerves stream tail` | Tail `autonomic.>` subjects from CLI |
+| **Integrated** | `autonomic start` | NATS → nerves started in order by supervisor |
+| **Integrated** | All organs | Publish/subscribe via nerves HTTP API or NATS directly |
+| **Integrated** | Cluster mode | Multi-node WireGuard-based NATS route configuration |
+
+In standalone mode, nerves serves as a NATS management CLI with stream inspection and ping diagnostics. In integrated mode, it's the async backbone — every organ publishes and subscribes through its APIs.
 
 ---
 
@@ -16,56 +69,25 @@ Part of the **[Autonomic AI](https://github.com/autonomic-ai-dev/agent-body)** e
 
 | Problem | agent-nerves answer |
 |---------|-------------------|
-| Organs can't talk async | **JetStream** — durable subjects (`autonomic.compute.job`, …) |
-| NATS ops is extra toil | **`autonomic start`** installs and supervises `nats-server` first |
-| No stream visibility | **`stream tail`** — inspect AUTONOMIC stream from CLI |
-| Multi-machine agents | **Cluster config** — route files and WireGuard-ready templates |
-
-```mermaid
-flowchart TD
-    NATS[nats-server<br>JetStream :4222]
-    Nerves[agent-nerves :3102]
-    Spine[agent-spine] <--> NATS
-    Muscle[agent-muscle] <--> NATS
-    Immune[agent-immune] <--> NATS
-    autonomic[autonomic start] --> NATS
-    NATS --> Nerves
-```
-
-**Start order:** `install-all-organs.sh` installs `nats-server` to `~/.local/bin`. Run `autonomic start` to launch `nats-server -js -m 8222`, then `agent-nerves serve`, then `agent-heart serve`.
+| Organs can't communicate asynchronously | **JetStream** — durable subjects (`autonomic.compute.job`, `autonomic.scan.result`, etc.) |
+| NATS operations are additional ops burden | **`autonomic start`** installs and supervises `nats-server` automatically |
+| No visibility into what's on the bus | **`stream tail`** — inspect `AUTONOMIC` stream subjects from CLI |
+| Multi-machine agent deployments are hard | **Cluster config** — route files and WireGuard-ready templates |
+| Filtering messages requires custom code | **Event filters** — JSON rules and WASM modules for selective routing |
 
 ---
 
-## Quick Install
+## What you get
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/autonomic-ai-dev/agent-nerves/master/scripts/install.sh | bash
-# recommended — includes nats-server:
-curl -fsSL https://raw.githubusercontent.com/autonomic-ai-dev/agent-body/master/scripts/install-all-organs.sh | bash
-export PATH="$HOME/.local/bin:$PATH"
-autonomic start
-```
-
-Verify:
-
-```bash
-agent-nerves status
-agent-nerves ping
-export AUTONOMIC_NATS_URL=nats://localhost:4222
-```
-
----
-
-## Main features
-
-| Feature | Setup | Why use it |
-|---------|-------|------------|
-| **JetStream bootstrap** | `serve` | Creates `AUTONOMIC` stream for the organism |
-| **Connectivity probe** | `ping` | Fail fast when broker is down |
-| **Stream tail** | `stream tail` | Debug async jobs without a GUI |
-| **Event filters** | `filter list/test` | JSON/WASM rules before publish |
-| **Cluster tooling** | `cluster init/status` | Multi-node NATS route generation |
-| **Embedded fallback** | config `[nerves.nats]` | Dev laptop without external NATS |
+| Feature | Why use it |
+|---------|------------|
+| **JetStream bootstrap** | `serve` creates the `AUTONOMIC` stream — no manual NATS admin |
+| **Connectivity probe** | `ping` — fail fast when NATS broker is down |
+| **Stream inspection** | `stream tail` — debug async jobs without a GUI |
+| **Event filters** | JSON rules or WASM modules evaluated before message publish |
+| **Cluster tooling** | Multi-node NATS route generation with WireGuard templates |
+| **Embedded fallback** | Config `[nerves.nats]` — dev laptop runs without external NATS |
+| **Health endpoints** | `GET /health`, `POST /nats/ping` — supervisor and integration probes |
 
 ---
 
@@ -73,24 +95,43 @@ export AUTONOMIC_NATS_URL=nats://localhost:4222
 
 | Command | Description |
 |---------|-------------|
-| `serve` | HTTP daemon; connects to NATS (embedded if unreachable) |
-| `ping` | Test NATS connectivity |
-| `status` | Config and broker paths |
-| `stream tail` | Tail JetStream on `autonomic.>` |
-| `cluster init\|status\|render-config` | Multi-node NATS route config |
-| `filter list\|test` | JSON / WASM event filters |
+| `agent-nerves serve` | HTTP daemon; connects to NATS (embedded fallback if unreachable) |
+| `agent-nerves ping` | Test NATS connectivity and latency |
+| `agent-nerves status` | Show config, broker URL, cluster state, filter registry |
+| `agent-nerves stream tail` | Tail JetStream messages on `autonomic.>` subjects |
+| `agent-nerves cluster init\|status\|render-config` | Multi-node NATS route configuration |
+| `agent-nerves filter list\|test` | Manage JSON/WASM event filters |
 
 ---
 
 ## HTTP API
 
-| Endpoint | Description |
-|----------|-------------|
-| `GET /health` | Daemon health |
-| `POST /nats/ping` | NATS connectivity check |
-| `GET /jetstream/status` | AUTONOMIC stream readiness |
-| `GET /cluster/status` | Cluster / WireGuard status |
-| `POST /filter/test` | Evaluate filter rules |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Daemon health and uptime |
+| `POST` | `/nats/ping` | NATS connectivity check |
+| `GET` | `/jetstream/status` | `AUTONOMIC` stream readiness |
+| `GET` | `/cluster/status` | Cluster topology and WireGuard status |
+| `POST` | `/filter/test` | Evaluate filter rules against a message |
+
+---
+
+## Quick Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/autonomic-ai-dev/agent-nerves/master/scripts/install.sh | bash
+
+# Recommended — includes nats-server:
+curl -fsSL https://raw.githubusercontent.com/autonomic-ai-dev/agent-body/master/scripts/install-all-organs.sh | bash
+export PATH="$HOME/.local/bin:$PATH"
+autonomic start
+```
+
+Verify:
+```bash
+agent-nerves status
+agent-nerves ping
+```
 
 ---
 
@@ -98,27 +139,21 @@ export AUTONOMIC_NATS_URL=nats://localhost:4222
 
 Section `[nerves]` in `~/.autonomic/config.toml` (default port **3102**).
 
-Cluster state: `~/.autonomic/state/nerves/` · Filters: `~/.autonomic/filters/` · Broker data: `~/.autonomic/broker/`
-
----
-
-## Local setup
-
-```bash
-git clone https://github.com/autonomic-ai-dev/agent-nerves.git && cd agent-nerves
-cargo build --release -p agent-nerves
-# start broker stack from agent-body checkout:
-autonomic start
-agent-nerves ping
-```
+| Path | Purpose |
+|------|---------|
+| `~/.autonomic/state/nerves/` | Cluster state and runtime data |
+| `~/.autonomic/filters/` | Event filter rules (JSON + WASM) |
+| `~/.autonomic/broker/` | NATS JetStream persistence |
 
 ---
 
 ## Development
 
 ```bash
+git clone https://github.com/autonomic-ai-dev/agent-nerves.git && cd agent-nerves
+cargo build --release -p agent-nerves
+cargo build --release -p agent-nerves --features wasm  # WASM event filter support
 cargo test --release -p agent-nerves
-cargo build --release -p agent-nerves --features wasm   # WASM filters
 ```
 
 ---
