@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-20
+
+### Added
+
+- **Unified config** — loads from `~/.autonomic/config.toml` via `agent-body-core::organ_config::load("nerves")`
+- **Global broker dir** — NATS/JetStream persistence defaults to `~/.autonomic/broker/`
+
+### Changed
+
+- Version bumped from `0.3.0` to `0.4.0`
+
 ## [0.3.0] - 2026-06-20
 
 ### Added
