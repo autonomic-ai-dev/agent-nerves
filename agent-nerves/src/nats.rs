@@ -11,6 +11,10 @@ pub struct NatsInfo {
     pub error: Option<String>,
 }
 
+pub async fn connect(url: &str) -> Result<async_nats::Client> {
+    Ok(async_nats::connect(url).await?)
+}
+
 pub async fn ping(config: &Config) -> Result<NatsInfo> {
     let url = &config.nats.url;
 
