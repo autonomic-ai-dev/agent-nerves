@@ -19,6 +19,7 @@ pub struct ServerConfig {
 pub struct NatsConfig {
     pub url: String,
     pub store_dir: Option<String>,
+    pub embedded: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -38,6 +39,7 @@ impl Default for Config {
             nats: NatsConfig {
                 url: "nats://localhost:4222".into(),
                 store_dir: None,
+                embedded: true,
             },
             spine: SpineConfig {
                 url: "http://localhost:3100".into(),

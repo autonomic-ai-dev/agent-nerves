@@ -18,6 +18,11 @@ pub async fn start(config: Config) -> anyhow::Result<()> {
     std::fs::create_dir_all(&broker_dir)?;
     tracing::info!("Broker store dir: {}", broker_dir.display());
 
+    if config.nats.embedded {
+        let _embedded =
+            crate::broker::ensure_embedded_broker(&broker_dir, &config.nats.url).await?;
+    }
+
     let jetstream_ready = match nats::connect(&config.nats.url).await {
         Ok(client) => jetstream::ensure_autonomic_stream(&client)
             .await

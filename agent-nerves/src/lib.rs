@@ -1,3 +1,4 @@
+pub mod broker;
 pub mod config;
 pub mod jetstream;
 pub mod nats;

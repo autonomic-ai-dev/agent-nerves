@@ -1,0 +1,63 @@
+use std::path::Path;
+use std::process::Stdio;
+use std::time::Duration;
+use tokio::process::Command;
+use tracing::{info, warn};
+
+/// Start an embedded `nats-server` with JetStream persistence when none is reachable.
+pub async fn ensure_embedded_broker(
+    store_dir: &Path,
+    url: &str,
+) -> anyhow::Result<Option<tokio::process::Child>> {
+    if ping_nats(url).await {
+        info!("NATS already reachable at {url}");
+        return Ok(None);
+    }
+
+    let port = parse_port(url).unwrap_or(4222);
+    info!(
+        store = %store_dir.display(),
+        port,
+        "starting embedded nats-server (-js)"
+    );
+
+    let child = Command::new("nats-server")
+        .arg("-js")
+        .arg("-sd")
+        .arg(store_dir)
+        .arg("-p")
+        .arg(port.to_string())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .map_err(|e| anyhow::anyhow!("failed to spawn nats-server: {e}"))?;
+
+    for _ in 0..20 {
+        tokio::time::sleep(Duration::from_millis(250)).await;
+        if ping_nats(url).await {
+            info!("embedded nats-server is ready");
+            return Ok(Some(child));
+        }
+    }
+
+    warn!("embedded nats-server did not become ready in time");
+    Ok(Some(child))
+}
+
+async fn ping_nats(url: &str) -> bool {
+    async_nats::connect(url).await.is_ok()
+}
+
+fn parse_port(url: &str) -> Option<u16> {
+    url.rsplit(':').next()?.parse().ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_port_from_nats_url() {
+        assert_eq!(parse_port("nats://localhost:4222"), Some(4222));
+    }
+}
