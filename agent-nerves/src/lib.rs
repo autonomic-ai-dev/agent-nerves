@@ -8,4 +8,5 @@ pub mod nats;
 pub mod serve;
 pub mod spine;
 pub mod stream;
+pub mod update;
 pub mod wasm_filter;

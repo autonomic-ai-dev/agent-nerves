@@ -14,21 +14,12 @@ pub struct Config {
     pub logging: LoggingConfig,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct FiltersConfig {
     #[serde(default)]
     pub enabled: bool,
     #[serde(default)]
     pub directory: Option<String>,
-}
-
-impl Default for FiltersConfig {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            directory: None,
-        }
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]

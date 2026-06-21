@@ -35,6 +35,12 @@ enum Commands {
         #[command(subcommand)]
         command: StreamCommands,
     },
+    /// Self-update to the latest GitHub release
+    Update {
+        /// Force update even if already at latest version
+        #[arg(short, long)]
+        force: bool,
+    },
     /// View supervisor process logs
     Log {
         /// Log name to view (omitting lists available logs)
@@ -229,6 +235,9 @@ async fn main() -> anyhow::Result<()> {
                 filters_dir.as_deref(),
             )
             .await?;
+        }
+        Commands::Update { force } => {
+            agent_nerves::update::run_update(force)?;
         }
         Commands::Log { name, follow, list } => {
             if list || name.is_none() {
