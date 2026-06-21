@@ -49,7 +49,7 @@ async fn tail_jetstream(
     from: TailFrom,
     filters_dir: Option<&std::path::Path>,
 ) -> Result<()> {
-    let client = async_nats::connect(url)
+    let client = agent_body_core::connect_nats()
         .await
         .with_context(|| format!("connect to NATS at {url}"))?;
     let js = ensure_autonomic_stream(&client).await?;
@@ -111,7 +111,7 @@ async fn tail_core_nats(
     raw: bool,
     filters_dir: Option<&std::path::Path>,
 ) -> Result<()> {
-    let client = async_nats::connect(url)
+    let client = agent_body_core::connect_nats()
         .await
         .with_context(|| format!("connect to NATS at {url}"))?;
     println!("Core NATS subscribe on '{subject}' (Ctrl+C to stop).");

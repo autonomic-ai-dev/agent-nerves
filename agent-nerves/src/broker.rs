@@ -10,8 +10,8 @@ pub async fn ensure_embedded_broker(
     url: &str,
     cluster_config: Option<&crate::cluster::ClusterConfig>,
 ) -> anyhow::Result<Option<tokio::process::Child>> {
-    if ping_nats(url).await {
-        info!("NATS already reachable at {url}");
+    if ping_nats().await {
+        info!("NATS already reachable");
         return Ok(None);
     }
 
@@ -22,23 +22,32 @@ pub async fn ensure_embedded_broker(
         "starting embedded nats-server (-js)"
     );
 
+    let secure_conf = agent_body_core::server_config_path();
     let mut cmd = Command::new("nats-server");
-    cmd.arg("-js")
-        .arg("-sd")
-        .arg(store_dir)
-        .stdout(Stdio::null())
-        .stderr(Stdio::null());
 
-    if let Some(cluster) = cluster_config.filter(|c| c.enabled) {
+    if secure_conf.exists() && !agent_body_core::nats_insecure_mode() {
+        info!("using secure NATS config {}", secure_conf.display());
+        cmd.arg("-c").arg(secure_conf);
+    } else if let Some(cluster) = cluster_config.filter(|c| c.enabled) {
         if let Ok(conf_path) = crate::cluster::write_nats_cluster_config(cluster, store_dir, port) {
             info!("using NATS cluster config {}", conf_path.display());
             cmd.arg("-c").arg(conf_path);
         } else {
-            cmd.arg("-p").arg(port.to_string());
+            cmd.arg("-js")
+                .arg("-sd")
+                .arg(store_dir)
+                .arg("-p")
+                .arg(port.to_string());
         }
     } else {
-        cmd.arg("-p").arg(port.to_string());
+        cmd.arg("-js")
+            .arg("-sd")
+            .arg(store_dir)
+            .arg("-p")
+            .arg(port.to_string());
     }
+
+    cmd.stdout(Stdio::null()).stderr(Stdio::null());
 
     let child = cmd
         .spawn()
@@ -46,7 +55,7 @@ pub async fn ensure_embedded_broker(
 
     for _ in 0..20 {
         tokio::time::sleep(Duration::from_millis(250)).await;
-        if ping_nats(url).await {
+        if ping_nats().await {
             info!("embedded nats-server is ready");
             return Ok(Some(child));
         }
@@ -56,8 +65,8 @@ pub async fn ensure_embedded_broker(
     Ok(Some(child))
 }
 
-async fn ping_nats(url: &str) -> bool {
-    async_nats::connect(url).await.is_ok()
+async fn ping_nats() -> bool {
+    agent_body_core::ping_nats().await
 }
 
 fn parse_port(url: &str) -> Option<u16> {

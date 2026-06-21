@@ -11,8 +11,8 @@ pub struct NatsInfo {
     pub error: Option<String>,
 }
 
-pub async fn connect(url: &str) -> Result<async_nats::Client> {
-    Ok(async_nats::connect(url).await?)
+pub async fn connect(_url: &str) -> Result<async_nats::Client> {
+    Ok(agent_body_core::connect_nats().await?)
 }
 
 pub async fn ping(config: &Config) -> Result<NatsInfo> {
@@ -20,7 +20,7 @@ pub async fn ping(config: &Config) -> Result<NatsInfo> {
 }
 
 pub async fn ping_url(url: &str) -> Result<NatsInfo> {
-    match async_nats::connect(url).await {
+    match agent_body_core::connect_nats().await {
         Ok(client) => {
             let server_id = Some(client.server_info().server_id.clone());
             drop(client);
