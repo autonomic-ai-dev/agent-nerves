@@ -35,6 +35,17 @@ enum Commands {
         #[command(subcommand)]
         command: StreamCommands,
     },
+    /// View supervisor process logs
+    Log {
+        /// Log name to view (omitting lists available logs)
+        name: Option<String>,
+        /// Follow log output (tail -f)
+        #[arg(short, long)]
+        follow: bool,
+        /// List available log files
+        #[arg(short, long)]
+        list: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -218,6 +229,24 @@ async fn main() -> anyhow::Result<()> {
                 filters_dir.as_deref(),
             )
             .await?;
+        }
+        Commands::Log { name, follow, list } => {
+            if list || name.is_none() {
+                let logs = agent_nerves::log::list_logs()?;
+                if logs.is_empty() {
+                    println!("no logs found");
+                } else {
+                    for log in logs {
+                        println!("{log}");
+                    }
+                }
+            } else if let Some(name) = name {
+                if follow {
+                    agent_nerves::log::follow_log(&name)?;
+                } else {
+                    agent_nerves::log::print_log(&name)?;
+                }
+            }
         }
     }
     Ok(())

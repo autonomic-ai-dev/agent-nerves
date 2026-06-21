@@ -3,6 +3,7 @@ pub mod cluster;
 pub mod config;
 pub mod filter;
 pub mod jetstream;
+pub mod log;
 pub mod nats;
 pub mod serve;
 pub mod spine;
