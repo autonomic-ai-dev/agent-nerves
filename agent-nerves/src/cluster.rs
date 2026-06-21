@@ -162,7 +162,11 @@ pub fn render_nats_cluster_config(
     let routes: Vec<String> = config
         .peers
         .iter()
-        .filter_map(|p| p.route_url.clone().or_else(|| default_route_url(&p.nats_url)))
+        .filter_map(|p| {
+            p.route_url
+                .clone()
+                .or_else(|| default_route_url(&p.nats_url))
+        })
         .map(|r| format!("  nats-route://{r}"))
         .collect();
 
@@ -203,14 +207,13 @@ fn elect_leader_id(config: &ClusterConfig) -> String {
         .chain(config.peers.iter().map(|p| p.id.clone()))
         .collect();
     ids.sort();
-    ids.into_iter().next().unwrap_or_else(|| config.node_id.clone())
+    ids.into_iter()
+        .next()
+        .unwrap_or_else(|| config.node_id.clone())
 }
 
 fn default_route_url(nats_url: &str) -> Option<String> {
-    let host = nats_url
-        .trim_start_matches("nats://")
-        .split(':')
-        .next()?;
+    let host = nats_url.trim_start_matches("nats://").split(':').next()?;
     Some(format!("{host}:6222"))
 }
 
@@ -223,7 +226,9 @@ fn wireguard_up(interface: Option<&str>) -> bool {
     }
     std::process::Command::new("sh")
         .arg("-c")
-        .arg(format!("ip link show {iface} 2>/dev/null || ifconfig {iface} 2>/dev/null"))
+        .arg(format!(
+            "ip link show {iface} 2>/dev/null || ifconfig {iface} 2>/dev/null"
+        ))
         .output()
         .map(|o| o.status.success())
         .unwrap_or(false)
