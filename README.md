@@ -102,6 +102,8 @@ In standalone mode, nerves serves as a NATS management CLI with stream inspectio
 | `agent-nerves cluster init\|status\|render-config` | Multi-node NATS route configuration |
 | `agent-nerves filter list\|test` | Manage JSON/WASM event filters |
 
+Global `--progress` (or `AGENT_PROGRESS=1`) enables structured ProgressTree CLI output.
+
 ---
 
 ## HTTP API
