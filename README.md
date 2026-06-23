@@ -1,8 +1,10 @@
 # agent-nerves — Distributed Event Bus for the Autonomic Ecosystem
 
-**NATS/JetStream connectivity, stream bootstrap, event filtering, and multi-node cluster coordination.**
+**Cloud-Native role: Service mesh** (Istio / Linkerd analog) — NATS JetStream connectivity, stream bootstrap, and event routing.
 
-agent-nerves is the **nervous system** of the Autonomic AI architecture. It connects organs to a shared NATS JetStream message bus, bootstraps the `AUTONOMIC` stream, and exposes health and management APIs. Every async communication between organs — compute jobs from muscle, scan results from immune, domain events from spine — flows through nerves.
+agent-nerves is the **agent mesh** for Autonomic. It connects daemons to a shared NATS JetStream message bus, bootstraps the `AUTONOMIC` stream, and exposes health and management APIs. Every async communication — compute jobs from muscle, scan results from immune, domain events from spine — flows through nerves.
+
+> Codename: *nerves organ*. Mapping: [cloud-native-platform.md](https://github.com/autonomic-ai-dev/agent-body/blob/master/docs/cloud-native-platform.md)
 
 The key design: **organs never speak to NATS directly.** They go through nerves, which handles connection management, reconnection backoff, stream verification, and cluster routing. This abstracts NATS topology from every organ and makes the bus observable through a single API.
 
