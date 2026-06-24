@@ -2,25 +2,23 @@
 
 **Cloud-Native role: Service mesh** (Istio / Linkerd analog) — NATS JetStream connectivity, stream bootstrap, and event routing.
 
-agent-nerves is the **agent mesh** for Autonomic. It connects daemons to a shared NATS JetStream message bus, bootstraps the `AUTONOMIC` stream, and exposes health and management APIs. Every async communication — compute jobs from muscle, scan results from immune, domain events from spine — flows through nerves.
-
-> Codename: *nerves organ*. Mapping: [cloud-native-platform.md](https://github.com/autonomic-ai-dev/agent-body/blob/master/docs/cloud-native-platform.md)
-
-The key design: **organs never speak to NATS directly.** They go through nerves, which handles connection management, reconnection backoff, stream verification, and cluster routing. This abstracts NATS topology from every organ and makes the bus observable through a single API.
+`agent-nerves` is the **service mesh** for Autonomic. It connects isolated daemons to a shared NATS JetStream message broker, bootstraps the `AUTONOMIC` stream, and exposes health and management APIs. 
+Every piece of async communication—compute jobs destined for `agent-muscle`, security scan results from `agent-immune`, or state transitions from `agent-spine`—flows through the NATS broker.
 
 ---
 
-## Core Concept
+## Under the Hood: How it Works
 
-A multi-organ agent system needs asynchronous communication. Without it, every operation blocks until a response arrives, and organ failures cascade. NATS JetStream provides durable, at-least-once delivery with wildcard subject routing — but configuring and operating NATS is additional ops burden.
+A multi-agent system needs asynchronous, event-driven communication. Without it, every API call blocks until a response arrives, and a single timeout cascades into a system failure. 
+Autonomic uses **NATS JetStream** to provide durable, at-least-once delivery with wildcard subject routing. However, configuring, bootstrapping, and operating a raw NATS broker is a massive ops burden for developers.
 
-agent-nerves wraps NATS with an organ-friendly HTTP API that:
+`agent-nerves` acts as a management wrapper around NATS that:
 
-1. Bootstraps the `AUTONOMIC` JetStream stream on startup
-2. Provides health probes (`/nats/ping`, `/health`) for the supervisor
-3. Manages reconnection with exponential backoff when NATS is unavailable
-4. Supports event filtering (JSON rules + WASM) for selective message routing
-5. Generates multi-node cluster configurations for distributed deployments
+1. **Auto-Bootstraps JetStream:** On startup, it connects to NATS and automatically configures the `AUTONOMIC` stream with the correct retention policies and replica limits.
+2. **Abstracts Topology:** The other daemons don't need to know how to configure JetStream streams; they just connect and publish to simple NATS subjects.
+3. **Resilience:** It manages reconnections with exponential backoff if the NATS broker crashes or is restarted.
+4. **WASM Filtering:** Supports dynamic event filtering (JSON rules + WASM) to drop invalid messages before they hit the stream.
+5. **Multi-Node Clusters:** Generates cluster configurations for distributed deployments across multiple physical machines.
 
 ```mermaid
 flowchart TD
