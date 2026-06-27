@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.8] - 2026-06-27
+
+### Added
+
+- **Dual-Mode MCP support** — `serve-mcp` subcommand starts MCP server only (no HTTP daemon)
+- **Nerves MCP tools** — `nerves_ping`, `nerves_health`, `nerves_jetstream_status`, `nerves_cluster_status`, `nerves_filter_list`, `nerves_filter_test` for NATS/event bridge operations via MCP
+
+## [0.6.7] - 2026-06-27
+
+### Changed
+
+- README refactored to document technical architecture and cloud-native platform messaging
+
 ## [0.6.7] - 2026-06-23
 
 ### Added
