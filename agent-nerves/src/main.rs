@@ -38,6 +38,8 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Start MCP server only (stdio), no HTTP daemon
+    ServeMcp,
     /// Start NATS broker health API (daemon)
     Serve,
     /// Ping the NATS server
@@ -139,6 +141,7 @@ async fn main() -> anyhow::Result<()> {
     let config = agent_nerves::config::Config::load()?;
 
     match cli.command {
+        Commands::ServeMcp => agent_nerves::serve_mcp(config).await?,
         Commands::Serve => {
             agent_nerves::serve::start(config).await?;
         }

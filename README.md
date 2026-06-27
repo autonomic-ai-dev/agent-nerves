@@ -2,6 +2,8 @@
 
 **Cloud-Native role: Service mesh** (Istio / Linkerd analog) — NATS JetStream connectivity, stream bootstrap, and event routing.
 
+Part of the **[Autonomic AI](https://github.com/autonomic-ai-dev/agent-body)** stack. `agent-nerves` implements **Dual-Mode MCP Transport**, meaning it can operate as a standalone binary or expose its tools through the unified `serve-mcp` Gateway.
+
 `agent-nerves` is the **service mesh** for Autonomic. It connects isolated daemons to a shared NATS JetStream message broker, bootstraps the `AUTONOMIC` stream, and exposes health and management APIs. 
 Every piece of async communication—compute jobs destined for `agent-muscle`, security scan results from `agent-immune`, or state transitions from `agent-spine`—flows through the NATS broker.
 
@@ -96,6 +98,7 @@ In standalone mode, nerves serves as a NATS management CLI with stream inspectio
 | Command | Description |
 |---------|-------------|
 | `agent-nerves serve` | HTTP daemon; connects to NATS (embedded fallback if unreachable) |
+| `agent-nerves serve-mcp` | MCP server only (stdio), no HTTP daemon |
 | `agent-nerves ping` | Test NATS connectivity and latency |
 | `agent-nerves status` | Show config, broker URL, cluster state, filter registry |
 | `agent-nerves stream tail` | Tail JetStream messages on `autonomic.>` subjects |
