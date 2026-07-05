@@ -1,10 +1,10 @@
 [package]
 name = "agent-nerves"
-version = "0.6.8"
+version = "0.7.0"
 edition = "2021"
 
 [dependencies]
-agent-body-core = { git = "https://github.com/autonomic-ai-dev/agent-body", tag = "v0.5.14", features = ["nats"] }
+agent-body-core = { git = "https://github.com/autonomic-ai-dev/agent-body", tag = "v0.5.17", features = ["nats", "wasm"] }
 anyhow = "1"
 async-nats = "0.39"
 futures = "0.3"
@@ -25,3 +25,9 @@ schemars = "0.8"
 
 [dev-dependencies]
 tempfile = "3"
+wat = "1"
+
+[[bench]]
+name = "wasm_filter_cached_vs_cold"
+harness = false
+path = "benches/wasm_filter_cached_vs_cold.rs"

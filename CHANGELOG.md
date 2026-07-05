@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0 — 2026-07-05
+
+### Added
+- **Phase 7 mesh hardening** — `backpressure.rs` token-bucket JetStream consumer with RT/BE/IDLE subject priority
+- **WASM filter cache** — `wasm_filter.rs` uses `agent-body-core::WasmEngine` shared module cache
+- Bench: `wasm_filter_cached_vs_cold`
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),

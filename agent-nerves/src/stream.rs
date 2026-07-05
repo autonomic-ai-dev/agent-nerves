@@ -89,8 +89,10 @@ async fn tail_jetstream(
         .await
         .context("subscribe to JetStream tail consumer")?;
 
+    let mut backpressure = crate::backpressure::PriorityConsumer::new();
     while let Some(msg) = messages.next().await {
         let msg = msg.context("JetStream tail message")?;
+        backpressure.acquire(&msg.subject).await;
         if should_drop(filters_dir, &msg.subject, &msg.payload)? {
             let _ = msg.ack().await;
             continue;

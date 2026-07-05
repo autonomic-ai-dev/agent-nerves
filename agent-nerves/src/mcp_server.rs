@@ -48,7 +48,9 @@ impl NervesMcp {
     async fn nerves_health(&self) -> Result<CallToolResult, McpError> {
         let now = chrono::Utc::now().to_rfc3339();
         let jetstream_ready = match crate::nats::connect(&self.config.nats.url).await {
-            Ok(client) => crate::jetstream::ensure_autonomic_stream(&client).await.is_ok(),
+            Ok(client) => crate::jetstream::ensure_autonomic_stream(&client)
+                .await
+                .is_ok(),
             Err(_) => false,
         };
         let status = serde_json::json!({
@@ -122,8 +124,11 @@ impl NervesMcp {
                 .as_deref()
                 .map(std::path::Path::new),
         );
-        match crate::filter::evaluate_event(&filters_dir, &params.subject, params.payload.as_bytes())
-        {
+        match crate::filter::evaluate_event(
+            &filters_dir,
+            &params.subject,
+            params.payload.as_bytes(),
+        ) {
             Ok(decision) => {
                 let text =
                     serde_json::to_string_pretty(&decision).unwrap_or_else(|_| "{}".to_string());

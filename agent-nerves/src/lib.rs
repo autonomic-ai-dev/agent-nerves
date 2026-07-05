@@ -1,3 +1,4 @@
+pub mod backpressure;
 pub mod broker;
 pub mod cluster;
 pub mod config;
