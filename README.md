@@ -125,10 +125,22 @@ Global `--progress` (or `AGENT_PROGRESS=1`) enables structured ProgressTree CLI 
 
 ## Quick Install
 
+### Homebrew (macOS — Recommended)
+
+```bash
+brew tap autonomic-ai-dev/tap
+brew install agent-nerves
+
+# Or install the full stack (includes all 10 organs + nats-server):
+brew install autonomic-stack
+```
+
+### Direct Download / curl
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/autonomic-ai-dev/agent-nerves/master/scripts/install.sh | bash
 
-# Recommended — includes nats-server:
+# Full stack via curl:
 curl -fsSL https://raw.githubusercontent.com/autonomic-ai-dev/agent-body/master/scripts/install-all-organs.sh | bash
 export PATH="$HOME/.local/bin:$PATH"
 autonomic start
