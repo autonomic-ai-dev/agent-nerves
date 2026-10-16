@@ -1,5 +1,7 @@
 # agent-nerves — Distributed Event Bus for the Autonomic Ecosystem
 
+Agent context: [docs/CONTEXT.md](docs/CONTEXT.md).
+
 **Cloud-Native role: Service mesh** (Istio / Linkerd analog) — NATS JetStream connectivity, stream bootstrap, and event routing.
 
 Part of the **[Autonomic AI](https://github.com/autonomic-ai-dev/agent-body)** stack. `agent-nerves` implements **Dual-Mode MCP Transport**, meaning it can operate as a standalone binary or expose its tools through the unified `serve-mcp` Gateway.
