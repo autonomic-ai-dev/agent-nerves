@@ -1,6 +1,6 @@
 # agent-nerves — Distributed Event Bus for the Autonomic Ecosystem
 
-Agent context: [docs/CONTEXT.md](docs/CONTEXT.md) · Architecture: [https://autonomic-ai.dev/docs/architecture](https://autonomic-ai.dev/docs/architecture).
+Agent context: [docs/CONTEXT.md](docs/CONTEXT.md) · Event Bus Guide: [https://autonomic-ai.dev/docs/event-bus](https://autonomic-ai.dev/docs/event-bus) · Architecture: [https://autonomic-ai.dev/docs/architecture](https://autonomic-ai.dev/docs/architecture).
 
 **Cloud-Native role: Service mesh** (Istio / Linkerd analog) — NATS JetStream connectivity, stream bootstrap, and event routing.
 
@@ -166,9 +166,11 @@ Section `[nerves]` in `~/.autonomic/config.toml` (default port **3102**).
 
 ---
 
-## Architecture
+## Architecture & Documentation
 
-For the complete 11-organ architecture specification, data flows, and MCP tool contracts, see the centralized [Autonomic AI Architecture Hub](https://autonomic-ai.dev/docs/architecture).
+For complete architectural specifications, NATS JetStream stream topologies, and MCP tool contracts, visit the centralized documentation hub:
+- **Distributed Event Bus Guide**: [https://autonomic-ai.dev/docs/event-bus](https://autonomic-ai.dev/docs/event-bus)
+- **Ecosystem Architecture**: [https://autonomic-ai.dev/docs/architecture](https://autonomic-ai.dev/docs/architecture)
 
 ---
 

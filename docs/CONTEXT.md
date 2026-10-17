@@ -7,7 +7,8 @@ NATS JetStream service mesh bridge for Autonomic. Part of [agent-body](https://g
 | Role | Service mesh |
 | Binary | `agent-nerves` |
 | HTTP | `:3102` (NATS `:4222` / monitor `:8222`) |
-| Version | 0.7.0+ |
+| Version | v1.0.0-beta.2 |
+| Docs Hub | [https://autonomic-ai.dev/docs/event-bus](https://autonomic-ai.dev/docs/event-bus) · [Architecture](https://autonomic-ai.dev/docs/architecture) |
 
 ## When to use
 
@@ -29,4 +30,4 @@ Path filter on `agent-nerves/**` + Cargo/Makefile/scripts/`.github`. Docs-only P
 
 ## Related
 
-Body (start order) · all organs publishing/consuming events
+Operator usage: [https://autonomic-ai.dev/docs/event-bus](https://autonomic-ai.dev/docs/event-bus) · Architecture: [https://autonomic-ai.dev/docs/architecture](https://autonomic-ai.dev/docs/architecture) · Body (start order) · all organs publishing/consuming events
