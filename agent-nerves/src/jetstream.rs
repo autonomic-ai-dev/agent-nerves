@@ -8,6 +8,12 @@ pub use agent_body_core::{
     default_ack_wait, default_duplicate_window, STREAM_NAME, STREAM_SUBJECT_WILDCARD,
 };
 
+pub const USAGE_STREAM_NAME: &str = "AUTONOMIC_USAGE";
+pub const USAGE_SUBJECT_WILDCARD: &str = "events.heart.>";
+pub const USAGE_SUBJECT_EVENT: &str = "events.heart.usage";
+pub const USAGE_SUBJECT_QUOTA: &str = "events.heart.quota";
+pub const USAGE_SUBJECT_ALERT: &str = "events.heart.budget.alert";
+
 /// Ensure the AUTONOMIC JetStream stream exists with durable file storage settings.
 ///
 /// NATS server must be started with JetStream enabled, e.g.
@@ -33,6 +39,32 @@ pub async fn ensure_autonomic_stream(client: &Client) -> Result<jetstream::Conte
         Err(e) => {
             warn!(error = %e, "jetstream unavailable — is nats-server running with -js?");
             Err(e).context("ensure AUTONOMIC jetstream stream")
+        }
+    }
+}
+
+/// Ensure the AUTONOMIC_USAGE JetStream stream exists with 14-day file retention.
+pub async fn ensure_usage_stream(client: &Client) -> Result<jetstream::Context> {
+    let js = jetstream::new(client.clone());
+
+    match js
+        .get_or_create_stream(jetstream::stream::Config {
+            name: USAGE_STREAM_NAME.to_string(),
+            subjects: vec![USAGE_SUBJECT_WILDCARD.to_string()],
+            storage: StorageType::File,
+            duplicate_window: default_duplicate_window(),
+            max_age: Duration::from_secs(14 * 24 * 3600),
+            ..Default::default()
+        })
+        .await
+    {
+        Ok(stream) => {
+            info!(stream = %stream.cached_info().config.name, "usage jetstream stream ready");
+            Ok(js)
+        }
+        Err(e) => {
+            warn!(error = %e, "usage jetstream unavailable — is nats-server running with -js?");
+            Err(e).context("ensure AUTONOMIC_USAGE jetstream stream")
         }
     }
 }
@@ -79,6 +111,33 @@ pub async fn publish_dedup(
     Ok(())
 }
 
+/// Publish a model turn usage event to JetStream with deduplication.
+pub async fn publish_usage_event(
+    js: &jetstream::Context,
+    event_id: &str,
+    payload: &[u8],
+) -> Result<()> {
+    publish_dedup(js, USAGE_SUBJECT_EVENT, event_id, payload).await
+}
+
+/// Publish a subscription quota snapshot event to JetStream with deduplication.
+pub async fn publish_quota_event(
+    js: &jetstream::Context,
+    quota_id: &str,
+    payload: &[u8],
+) -> Result<()> {
+    publish_dedup(js, USAGE_SUBJECT_QUOTA, quota_id, payload).await
+}
+
+/// Publish a budget alert event to JetStream with deduplication.
+pub async fn publish_budget_alert(
+    js: &jetstream::Context,
+    alert_id: &str,
+    payload: &[u8],
+) -> Result<()> {
+    publish_dedup(js, USAGE_SUBJECT_ALERT, alert_id, payload).await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -88,4 +147,14 @@ mod tests {
         assert_eq!(STREAM_NAME, "AUTONOMIC");
         assert!(STREAM_SUBJECT_WILDCARD.contains("autonomic"));
     }
+
+    #[test]
+    fn usage_stream_constants_are_stable() {
+        assert_eq!(USAGE_STREAM_NAME, "AUTONOMIC_USAGE");
+        assert_eq!(USAGE_SUBJECT_WILDCARD, "events.heart.>");
+        assert_eq!(USAGE_SUBJECT_EVENT, "events.heart.usage");
+        assert_eq!(USAGE_SUBJECT_QUOTA, "events.heart.quota");
+        assert_eq!(USAGE_SUBJECT_ALERT, "events.heart.budget.alert");
+    }
 }
+
