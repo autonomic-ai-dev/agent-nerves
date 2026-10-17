@@ -1,7 +1,7 @@
 # agent-nerves — Deep Operational & Architectural Context for Agents
 
 > **Distributed Event Mesh, NATS JetStream Bridge & IPC Telemetry Fabric** — In-depth architectural guide, stream persistence, backpressure regulation, CLI matrix, HTTP/MCP contracts, and failure recovery runbooks for `agent-nerves`.  
-> **Ecosystem Version Baseline:** `v1.0.0-beta.3`  
+> **Ecosystem Version Baseline:** `v1.0.0-beta.3.2`  
 > **Documentation Hub:** [https://autonomic-ai.dev/docs/networking](https://autonomic-ai.dev/docs/networking) · [Architecture Hub](https://autonomic-ai.dev/docs/architecture)  
 > **Port:** HTTP API `:3102` · NATS Client `:4222` · NATS Monitor `:8222`  
 > **Default Workspace & Broker:** `~/.autonomic/nerves/` · `~/.autonomic/broker/`
