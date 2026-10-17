@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.0.0-beta.3.1] - 2026-10-17
+
+### Added
+- **`events.heart.usage` JetStream Stream** — Added dedicated file-backed JetStream stream for asynchronous model usage telemetry broadcasts.
+- **Model Usage Publisher & Subscriber Helpers** — Provided type-safe helpers for publishing and streaming `UsageRecordedEvent` payloads across the mesh.
+- **Verification Playbook Suite** — Added `.verify/run.sh` test suite validating stream initialization and message propagation.
+
+### Changed
+- Bumped version to `v1.0.0-beta.3.1`.
+
 ## [1.0.0-beta.3] - 2026-10-17
 
 ### Changed
