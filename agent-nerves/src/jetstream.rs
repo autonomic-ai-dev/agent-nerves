@@ -138,6 +138,40 @@ pub async fn publish_budget_alert(
     publish_dedup(js, USAGE_SUBJECT_ALERT, alert_id, payload).await
 }
 
+/// Cloud JetStream leaf bridge targeting telemetry events.
+pub const CLOUD_BRIDGE_SUBJECTS: &[&str] = &[USAGE_SUBJECT_EVENT, USAGE_SUBJECT_QUOTA];
+
+/// Check if a subject is targeted by the cloud telemetry leaf bridge.
+#[must_use]
+pub fn is_cloud_bridge_target(subject: &str) -> bool {
+    CLOUD_BRIDGE_SUBJECTS.contains(&subject)
+}
+
+/// Options for configuring the remote cloud NATS connection.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct CloudBridgeOptions {
+    pub url: String,
+    pub creds_file: Option<String>,
+    pub jwt: Option<String>,
+    pub nkey_seed: Option<String>,
+    pub user: Option<String>,
+    pub password: Option<String>,
+}
+
+impl CloudBridgeOptions {
+    #[must_use]
+    pub fn from_config(cfg: &crate::config::CloudBrokerConfig) -> Self {
+        Self {
+            url: cfg.url.clone(),
+            creds_file: cfg.creds_file.clone(),
+            jwt: cfg.jwt.clone(),
+            nkey_seed: cfg.nkey_seed.clone(),
+            user: cfg.user.clone(),
+            password: cfg.password.clone(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -155,6 +189,33 @@ mod tests {
         assert_eq!(USAGE_SUBJECT_EVENT, "events.heart.usage");
         assert_eq!(USAGE_SUBJECT_QUOTA, "events.heart.quota");
         assert_eq!(USAGE_SUBJECT_ALERT, "events.heart.budget.alert");
+    }
+
+    #[test]
+    fn test_cloud_bridge_targets_usage_and_quota_events() {
+        assert!(is_cloud_bridge_target("events.heart.usage"));
+        assert!(is_cloud_bridge_target("events.heart.quota"));
+        assert!(!is_cloud_bridge_target("events.heart.budget.alert"));
+        assert!(!is_cloud_bridge_target("autonomic.spine.run"));
+    }
+
+    #[test]
+    fn test_cloud_bridge_options_from_config() {
+        let cfg = crate::config::CloudBrokerConfig {
+            enabled: true,
+            url: "tls://connect.ngs.global:4222".into(),
+            creds_file: Some("/path/to/ngs.creds".into()),
+            jwt: Some("jwt-token".into()),
+            nkey_seed: Some("seed".into()),
+            user: None,
+            password: None,
+            leaf_node: true,
+        };
+
+        let opts = CloudBridgeOptions::from_config(&cfg);
+        assert_eq!(opts.url, "tls://connect.ngs.global:4222");
+        assert_eq!(opts.creds_file.as_deref(), Some("/path/to/ngs.creds"));
+        assert_eq!(opts.jwt.as_deref(), Some("jwt-token"));
     }
 }
 
