@@ -1,6 +1,6 @@
 # agent-nerves — Distributed Event Bus for the Autonomic Ecosystem
 
-Agent context: [docs/CONTEXT.md](docs/CONTEXT.md) · Event Bus Guide: [https://autonomic-ai.dev/docs/event-bus](https://autonomic-ai.dev/docs/event-bus) · Architecture: [https://autonomic-ai.dev/docs/architecture](https://autonomic-ai.dev/docs/architecture).
+Agent context: [CONTEXT.md](CONTEXT.md) · Event Bus Guide: [https://autonomic-ai.dev/docs/event-bus](https://autonomic-ai.dev/docs/event-bus) · Architecture: [https://autonomic-ai.dev/docs/architecture](https://autonomic-ai.dev/docs/architecture).
 
 **Cloud-Native role: Service mesh** (Istio / Linkerd analog) — NATS JetStream connectivity, stream bootstrap, and event routing.
 
