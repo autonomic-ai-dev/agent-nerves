@@ -129,7 +129,10 @@ mod tests {
         let cloud = cfg.cloud.expect("cloud broker config present");
         assert!(cloud.enabled);
         assert_eq!(cloud.url, "tls://connect.ngs.global:4222");
-        assert_eq!(cloud.creds_file.as_deref(), Some("/Users/test/.autonomic/ngs.creds"));
+        assert_eq!(
+            cloud.creds_file.as_deref(),
+            Some("/Users/test/.autonomic/ngs.creds")
+        );
         assert!(cloud.leaf_node);
     }
 }

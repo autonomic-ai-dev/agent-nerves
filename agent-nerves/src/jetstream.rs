@@ -218,4 +218,3 @@ mod tests {
         assert_eq!(opts.jwt.as_deref(), Some("jwt-token"));
     }
 }
-
