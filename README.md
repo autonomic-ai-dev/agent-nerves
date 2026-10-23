@@ -119,7 +119,8 @@ Global `--progress` (or `AGENT_PROGRESS=1`) enables structured ProgressTree CLI 
 | `POST` | `/nats/ping` | NATS connectivity check |
 | `GET` | `/jetstream/status` | `AUTONOMIC` stream readiness |
 | `GET` | `/cluster/status` | Cluster topology and WireGuard status |
-| `POST` | `/filter/test` | Evaluate filter rules against a message |
+
+Filter rules are evaluated from the CLI (`agent-nerves filter test`). No HTTP filter route is served.
 
 ---
 
