@@ -1,12 +1,12 @@
 [package]
 name = "agent-nerves"
-version = "1.0.0-beta.3.9"
+version = "1.0.0-rc1"
 edition = "2021"
 
 [dependencies]
-agent-body-core = { git = "https://github.com/autonomic-ai-dev/agent-body", tag = "v1.0.0-beta.3", features = ["nats", "wasm"] }
+agent-body-core = { git = "https://github.com/autonomic-ai-dev/agent-body", tag = "v1.0.0-rc1", features = ["nats", "wasm"] }
 anyhow = "1"
-async-nats = "0.39"
+async-nats = "0.47"
 futures = "0.3"
 axum = "0.7"
 chrono = "0.4"
