@@ -25,6 +25,10 @@ Summary: agent-nerves carries Autonomic events over a NATS JetStream bus, expose
   - Behaviour: `GET /health`.
   - Outcome: A JSON status with uptime.
 
+## Code
+
+- `agent-nerves`
+
 ## How to get to it (user POV)
 
 - CLI: `agent-nerves serve`, `serve-mcp`, `ping`, `status`, `stream tail`, `cluster …`, `filter …`
